@@ -1,0 +1,22 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Generated figures and private documents are not published
+*.pdf
+*.docx
+plots/
+
+# Superseded and private files kept locally, not published
+_archive/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Instructions for the coding assistant; kept locally, not published
+CLAUDE.md

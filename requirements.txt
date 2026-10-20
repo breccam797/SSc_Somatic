@@ -1,0 +1,20 @@
+# Package versions for reproducing the published analysis (Python 3.12).
+# Versions without a pin were not recorded for the original analysis.
+#
+# Install with:
+#   pip install -r requirements.txt
+#   pip install -e .
+
+pandas==2.3.0
+numpy==1.26.4
+scipy==1.11.4
+matplotlib==3.9.4
+seaborn==0.13.2
+statsmodels==0.14.4
+scikit-learn>=1.2
+gseapy>=1.0
+pyyaml>=6.0
+
+# Needed only to run the notebooks
+jupyterlab
+ipykernel

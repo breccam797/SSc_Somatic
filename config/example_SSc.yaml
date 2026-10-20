@@ -1,0 +1,229 @@
+# Example study configuration for the SSc_Somatic analysis package.
+# Author: Brecca Miller (brecca797@gmail.com)
+#
+# This file holds the settings used for the systemic sclerosis (SSc) cohort
+# analysis. To analyze another cohort, copy this file and replace the values.
+#
+# Path rules:
+#   data_root    Absolute path to the folder that holds all study data, or a
+#                path relative to this configuration file.
+#   output_root  Folder for files this code generates. A relative path is
+#                resolved against data_root.
+#   All other paths are relative to data_root unless they are absolute.
+#
+# File names below are placeholders that follow the original study layout.
+# See docs/input_specification.md for the required format of each file.
+
+data_root: /path/to/SSc_Somatic_data
+output_root: outputs
+
+
+# Shared inputs used by every analysis
+
+inputs:
+  # Clinical and demographic metadata, one row per participant
+  metadata: documentation/SSc_analysis_inputs/ssc_exome_patient_meta_table.csv
+  # Sample exclusion lists, each with a sample_id column
+  panel_of_normals_samples: documentation/SSc_analysis_inputs/PON_controls_sample_list.txt
+  multi_antibody_samples: documentation/SSc_analysis_inputs/ssc_multi_ana_pos_sample_blacklist.csv
+  low_plate_samples: documentation/SSc_analysis_inputs/ssc_exome_under_500_variants_meta_data.csv
+  # Samples sequenced from blood, with a sample_id column
+  blood_sample_ids: documentation/design_files/ssc_gnomadv4_all_samples_blood_vcf_ids.csv
+
+reference:
+  gene_constraint: hg38_reference/gnomadv4/gnomad.v4.1.constraint_metrics_highest_pli_per_gene.tsv
+  gene_annotation_gff: hg38_reference/OQFE_protocol_ref_files/other_1000G_ref_files/GCA_000001405.15_GRCh38_full_analysis_set.refseq_annotation.gff
+  magma_gene_locations: documentation/magma/NCBI37.3.gene.loc
+  gwas_summary_statistics: documentation/lopez_gwas_files/Lopez-Isac_prePMID_META_GWAS_SSc.meta.txt
+
+
+# Sample exclusions
+
+exclusions:
+  exclude_panel_of_normals: true
+  exclude_multi_antibody: true
+  exclude_low_plate: false
+
+
+# CHIP analysis (variant calls from the CHmasked Mutect2 run, in which clonal
+# hematopoiesis variants were masked in the gnomAD resource used for calling)
+
+chip:
+  passing_sample_ids: documentation/SSc_analysis_inputs/ssc_CHmasked_passing_sample_ids.txt
+  snv_table: documentation/SSc_analysis_inputs/ssc_CHmasked_passing_sample_snv_df.txt
+  snv_table_separator: ","
+  whitelist_calls_dir: chip_results/SSc_chip_output/Jaiswal_CHIP_hotspot_variants
+  whitelist_file_pattern: "{sample_id}.annovar.varsOI.wl.txt"
+  genes_of_interest: [DNMT3A, TET2, ASXL1, PPM1D]
+  # Participants at or above this age are excluded from age-stratified CHIP
+  # analyses because too few samples fall in that range.
+  max_age: 80
+
+
+# Mutation burden analysis (variant calls from the main Mutect2 run)
+
+mutation:
+  passing_sample_ids: documentation/SSc_analysis_inputs/SSc_passing_sample_ids.txt
+  snv_table: documentation/SSc_analysis_inputs/SSc_passing_sample_snv_df.txt
+  # The passing-samples notebook writes this table tab-separated
+  snv_table_separator: "\t"
+  annovar_dir: mutect2_results/SSc_mutect2_gnomadv4_AFR_AMR_results/final_vcf_annotated
+  annovar_filtered_dir: mutect2_results/SSc_mutect2_gnomadv4_AFR_AMR_results/final_vcf_annotated_dbsnp_cosmic_filt/previous_filtered_txt
+  annovar_file_prefix: myanno_
+  annovar_file_suffix: .hg38_multianno.txt
+  annovar_vcf_suffix: .hg38_multianno.vcf
+  annovar_filtered_vcf_suffix: .hg38_multianno_dbsnp_cosmic_filt.vcf
+
+
+# Mutational signature analysis (SigProfiler output for the main run)
+
+signatures:
+  design_file: signature_analysis/SSc_sigprofiler_analysis/all_samples_AMR_AFR_dbsnp_cosmic_filt/ssc_gnomvadv4_all_samples_AMR_AFR_dbsnp_cosmic_filt_sig_decompose_design_file.txt
+  denovo_signature_profiles: signature_analysis/SSc_sigprofiler_analysis/all_samples_AMR_AFR_dbsnp_cosmic_filt/extraction_results/SBS_96/SBS96/All_Solutions/SBS96_2_Signatures/Signatures/SBS96_S2_Signatures.txt
+  cosmic_signature_profiles: signature_analysis/SSc_sigprofiler_analysis/all_samples_AMR_AFR_dbsnp_cosmic_filt/assignment_results_decompose/SBS_96/Assignment/SBS96/2/Decompose_Solution/Signatures/Decompose_Solution_Signatures.txt
+  # SigProfiler sample names are split on this delimiter and the part at this
+  # position is used as the sample ID.
+  sample_name_delimiter: _
+  sample_name_position: 0
+  # Suffix removed from mutation matrix column names to recover sample IDs
+  matrix_column_suffix: _Mutect2_final_cp
+  denovo_sbs: [SBS96A, SBS96B]
+  cosmic_sbs: [SBS1, SBS5]
+  denovo_indel: [ID83A, ID83C, ID83D]
+  families:
+    de_novo_sbs: [SBS96A, SBS96B]
+    cosmic_sbs: [SBS1, SBS5, SBS23, SBS24, SBS87]
+    de_novo_id: [ID83A, ID83C, ID83D]
+    cosmic_id: [ID1, ID2, ID4, ID8, ID9, ID15, ID16, ID19]
+  # Disease-duration windows (years) that define the baseline and early cohorts
+  baseline_duration: 3.0
+  early_duration: 2.0
+  young_age: 40
+
+
+# Generated files, relative to output_root
+
+outputs:
+  chip:
+    processed_metadata: chip/ssc_exome_patient_meta_table_processed.csv
+    combined_whitelist_calls: chip/SSc_CHIP_combined_whitelist_calls.txt
+    whitelist_tidy_table: chip/SSc_CHIP_tidy_table_WL.txt
+    whitelist_merged_table: chip/SSc_CHIP_merged_tidy_table_WL.txt
+    figures_dir: figures/chip
+  mutation:
+    combined_variants: mutation/SSc_combined_all_samples_AMR_AFR_dbsnp_cosmic_filt_multianno_vcfs.txt
+    tidy_variants: mutation/SSc_combined_all_samples_AMR_AFR_dbsnp_cosmic_filt_multianno_vcfs_filt_intronic_sb.txt
+    sample_qc_dir: mutation/sample_qc
+    enrichment_dir: mutation/gwas_validation/gobp_analysis
+    gwas_validation_dir: mutation/gwas_validation
+    # MAGMA is run outside this package; place its gene-set output here
+    magma_gene_set_results: mutation/gwas_validation/magma_results/ssc_nk_gwas_hybrid.gsa.out
+    figures_dir: figures/mutation_burden
+  signatures:
+    figures_dir: figures/signatures
+
+
+# Cohort definition: how the metadata encodes groups and clinical variables
+
+cohort:
+  metadata_sample_column: Patient_ID
+  status_column: statustype
+  case_label: Index Case
+  control_label: Control
+  subtype_column: SSc Type
+  # Exactly two case subtypes; the analyses compare each with controls and
+  # with each other
+  subtypes: [Limited, Diffuse]
+  group_column: statustype_subtype
+  group_order: [Control, Limited, Diffuse]
+  group_colors:
+    Control: "#239a8b"
+    Limited: "#2a2d7c"
+    Diffuse: "#8a181a"
+  race_column: race
+  ethnicity_column: Ethnicity
+  race_order: [White Non-Hispanic, White Hispanic, Black]
+  race_colors:
+    White Non-Hispanic: "#D72000"
+    White Hispanic: "#9093A2"
+    Black: "#132157"
+    Asian: "#1BB6AF"
+    Other: "#FFAD0A"
+  clinical_columns:
+    age: Age
+    disease_duration: Disease Duration
+    age_of_onset: age_of_onset
+    skin_score: MRSS
+    fvc_percent_predicted: FVC %predicted
+    dlco_percent_predicted: DLCO %Predicted
+  # Binary (0/1) columns derived from a metadata column, added to the sample
+  # table for the mutation and signature analyses
+  indicator_columns:
+    Black:
+      column: race
+      value: Black
+
+age_groups:
+  bin_edges: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+  broad_groups:
+    20-29: Younger
+    30-39: Younger
+    40-49: Mid-Life
+    50-59: Mid-Life
+    60-69: Older
+    70-79: Older
+
+
+# Column names in the annotated variant tables
+
+variant_columns:
+  gene: GENE
+  function: FUNC
+  vaf: vaf
+  sample: SAMPLE
+  variant_id: variant_id
+
+protein_altering_functions:
+  - nonsynonymous_SNV
+  - stopgain
+  - startloss
+  - stoploss
+  - frameshift_deletion
+  - frameshift_insertion
+  - nonframeshift_substitution
+  - nonframeshift_deletion
+  - nonframeshift_insertion
+
+
+# Gene-set enrichment and NK cell convergence analysis
+
+enrichment:
+  gseapy_library: GO_Biological_Process_2023
+  nk_terms_significant:
+    GO:0002323: Natural Killer Cell Activation Involved In Immune Response
+    GO:0043320: Natural Killer Cell Degranulation
+    GO:0042267: Natural Killer Cell Mediated Cytotoxicity
+    GO:0019730: Antimicrobial Humoral Response
+  nk_terms_subthreshold:
+    GO:0030101: Natural Killer Cell Activation
+    GO:0042269: Natural Killer Cell Mediated Immunity
+    GO:0060337: Type I Interferon Mediated Signaling Pathway
+    GO:0071357: Cellular Response To Type I Interferon
+  nk_somatic_genes: [FCGR3A, NKG7, KLRF2]
+  nk_vaf_threshold: 0.35
+  nk_comparison_continuous: [Age, age_of_onset, MRSS, FVC %predicted, DLCO %Predicted]
+  nk_comparison_categorical: [race, Ethnicity]
+
+
+# GWAS summary statistics format (Lopez-Isac et al. 2019)
+
+gwas:
+  columns:
+    snp: SNP
+    chromosome: CHR
+    position: BP
+    p_value: P
+    effect_allele: A1
+    other_allele: A2
+    odds_ratio: OR
+  total_sample_size: 26679

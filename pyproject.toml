@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SSc_Somatic"
+version = "0.1.0"
+description = "Somatic mutation burden, CHIP and mutational signature analysis for exome-sequenced cohorts"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Brecca Miller", email = "brecca797@gmail.com"}]
+requires-python = ">=3.9"
+# Minimum versions the code needs. requirements.txt and environment.yml pin
+# the versions used for the published analysis.
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.23,<2",
+    "scipy>=1.11",
+    "matplotlib>=3.7",
+    "seaborn>=0.13",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.2",
+    "gseapy>=1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+notebooks = ["jupyterlab", "ipykernel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

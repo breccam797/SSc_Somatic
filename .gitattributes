@@ -1,0 +1,8 @@
+# Store all text files with LF line endings so scripts run on Linux clusters
+* text=auto eol=lf
+
+# Binary files are never converted
+*.pdf binary
+*.docx binary
+*.png binary
+*.jpg binary
